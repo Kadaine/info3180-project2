@@ -1,0 +1,27 @@
+# ----------------------
+# Flask
+# ----------------------
+flask
+Flask-WTF
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+WTForms==2.1
+psycopg2
+Flask-Script
+Jinja2==2.9.4
+MarkupSafe==0.23
+Werkzeug==0.11.15
+click==6.7
+itsdangerous==0.24
+wsgiref==0.1.2
+packaging==16.8
+PyJWT==1.4.2
+pyparsing==2.2.0
+six==1.10.0
+appdirs==1.4.3
+Flask-JWT==0.3.2
+# ----------------------
+# Production Server
+# ----------------------
+gunicorn
