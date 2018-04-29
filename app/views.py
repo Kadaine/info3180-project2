@@ -94,12 +94,11 @@ def upload(user_id):
 @requires_auth
 def get_user_post(user_id):
     if request.method == "GET":
-        user_posts = UserPost.query.filter_by(user_id=UserPost.user_id).all()
+        user_posts = UserPost.query.filter_by(user_id=user_id).all()
         if user_posts is not None:
             output = []
             for post in user_posts:
-                user = UserProfile.query.filter_by(id = post.user_id).first()
-                user_data={ "firstname":user.first_name,"lastname":user.last_name,"location":user.location,"biography":user.biography,"joined_on":user.joined_on}
+                user = UserProfile.query.filter_by(id = user_id).first()
                 post_data= {"id":post.post_id,"userid": post.user_id,"profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
                 output.append(post_data)
             return jsonify({"firstname":user.first_name,"lastname":user.last_name,'profile_photo':user.profile_photo,"location":user.location,"biography":user.biography,"joined_on":user.joined_on,'posts':output})
@@ -143,7 +142,7 @@ def get_all_post():
             output = []
             for post in all_posts:
                 user = UserProfile.query.filter_by(id = post.user_id).first()
-                post_data= {"userid": post.user_id, "username": user.username, "profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
+                post_data= {"user_id": post.user_id, "username": user.username, "profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
                 output.append(post_data)
             return jsonify({'posts':output})
         else:

@@ -36,6 +36,7 @@ Vue.component('app-header', {
     created: function() {
         let self = this;
         self.user=localStorage.getItem('token');
+        self.user_id=localStorage.getItem('user_id');
     },
     data: function() {
         return {
@@ -46,6 +47,7 @@ Vue.component('app-header', {
         reload(){
             let self = this;
             self.user=localStorage.getItem('token');
+            self.user_id=localStorage.getItem('user_id');
         }
     }
 });
@@ -101,48 +103,45 @@ const About = Vue.component('about', {
 const Profile = Vue.component('profile', {
    template: `
     <div>
-        <div class="news">
-                <h2 >All Post</h2>
-                <div class="container">
-                    <div class="form-inline d-flex justify-content-center"></div>
-                        <div style="margin-left: 90%">
-                            <router-link class="btn btn-primary post_div" to="/upload">New Post</router-link>
-                        </div>
-                        <div class="card bg-light text-dark" style="margin-left: 25%; width:500px">
-                            <div class="card-body">
-                                    <ul class="news__list">
-                                        <div>
-                                            <img v-bind:src= "'/static/uploads/'+response.profile_photo" class="thumbnail" /> </br>
-                                        </div>
-                                        <div>
-                                        <p>{{response.firstname}} {{response.lastname}}</p>
-                                        </div>
-                                        <div>
-                                        <p>{{response.location}}</p>
-                                        </div>
-                                        <div>
-                                        <p>{{response.biography}}</p>
-                                        </div>
-                                        <div>
-                                        <p>{{response.joined_on}}</p>
-                                        </div>
-                                        <li v-for="post in response.posts"class="news__item">
-                                            <img v-bind:src= "'/static/uploads/'+post.photo_name" class="thumbnail" /> </br>
-                                        </li>
-                                    </ul>
-                                </div>
-                        </div>
-                    </div>    
+        <div>
+            <h2 >All Post</h2>
+            <div style="margin-left: 90%">
             </div>
+            <div>
+                <div class="row border-style center profile profiles-container">
+                    <img v-bind:src= "'/static/uploads/'+response.profile_photo" class="thumbnail" /> </br>
+                        <div class ="col">
+                            <h5>{{response.firstname}} {{response.lastname}}</h5>
+                            <h5>{{response.location}}</h5>
+                            <h5>{{response.biography}}</h5>
+                            <h5>{{response.joined_on}}</h5>
+                        </div>
+                        <div class ="col">
+                        <h5>posts</h5>
+                        <h5>following</h5>
+                        </div>
+                </div>
+                <div class="pro-format">
+                    <li v-for="post in response.posts" class="list pro-grid">
+                        <img v-bind:src= "'/static/uploads/'+post.photo_name" class="thumbnail" /> </br>
+                    </li>
+                </div>
+            </div>    
+        </div>
     </div>
    `,
+    watch: {
+        '$route' (to, fom){
+            this.reload()
+        }
+     },
     data: function() {
        return {
            response: [],
            error: []
        };
     },
-        created: function () {
+    created: function () {
             let self = this;
             let user_id = this.$route.params.user_id;
             fetch("/api/users/"+user_id+"/posts", { 
@@ -159,7 +158,6 @@ const Profile = Vue.component('profile', {
                 .then(function (response) {
                 // display a success message
                     console.log(response);
-                    console.log(response.user_data);
                     self.response = response;
                     self.error = response.error;
                     //self.messageflag = true;
@@ -168,6 +166,7 @@ const Profile = Vue.component('profile', {
                 console.log(error);
          
            });
+            
     }
 });
 
@@ -291,7 +290,7 @@ const uploadform= Vue.component('upload-form', {
     template: `
     <div>
         <div>
-        <h2>Upload</h2>
+        <h2 style="margin-left: 25%">Upload</h2>
         </div>
         <ul class="list">
             <li v-for="resp in response"class="list alert alert-success">
@@ -303,25 +302,31 @@ const uploadform= Vue.component('upload-form', {
                 {{resp.error[1]}}
             </li>
         </ul>
+        <div class="container">
             <form id="uploadForm"  @submit.prevent="uploadPhoto" method="POST" enctype="multipart/form-data">
                 <div>
-
-                <div class="form-group">
-                    <label for="msg">Photo Upload</label>
-                </div>
-                <div class="upload-btn-wrapper">
-                <button id="btn">Browse...</button>
-                <input type="file" name="upload"/>
-                </div><br><br>
-                <div class="form-group">
-                    <label for="msg">Caption</label>
-                </div>
-                <div class="form-group">
-                    <textarea class="textbx" id="msg" name="caption"></textarea>
-                </div><br>
-                </div>
-                <button type="submit" class="btn btn-primary">Upload</button>
+                <div class="card bg-light text-dark" style="margin-left: 25%; width:500px">
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="msg">Photo Upload</label>
+                        </div>
+                        <div class="upload-btn-wrapper">
+                            <button id="btn">Browse...</button>
+                        <input type="file" name="upload"/>
+                        </div><br><br>
+                        <div class="form-group">
+                            <label for="msg">Caption</label>
+                        </div>
+                        <div class="form-group col-sm-12">
+                            <textarea class="form-control" rows="4" id="msg" name="caption" placeholder="Write a caption..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary  col-sm-12">Upload</button>
+                        </div>
+                        
+                    </div>
+                </div>    
             </form>
+        </div>
         </div>
     </div>
     `,
@@ -456,7 +461,7 @@ const Login = Vue.component('login', {
 
 const Explore= Vue.component('explore', {
     template: `
-        <div>
+       <div>
             <div class="news">
                 <h2 >All Post</h2>
                 <div class="container">
@@ -469,8 +474,7 @@ const Explore= Vue.component('explore', {
                                     <ul class="news__list">
                                         <li v-for="post in response.posts"class="news__item">
                                             <img v-bind:src= "'/static/uploads/'+post.profile_photo" class="thumbnail" /> </br>
-                                            {{ post.username}}
-                                            <router-link v-bind:to="'/users/' +post.userid">{{ post.username}}</router-link></p>
+                                            <router-link v-bind:to="'/users/' +post.user_id">{{ post.username}}</router-link></p>
                                             <img v-bind:src= "'/static/uploads/'+post.photo_name" class="thumbnail" /> </br>
                                             {{ post.caption}}
                                             {{ post.user_id}}
@@ -511,6 +515,32 @@ const Explore= Vue.component('explore', {
                 .catch(function (error) {
                 console.log(error);
             });
+    },
+    getuser: function () {
+            let self = this;
+            let user_id = this.$route.params.user_id;
+            fetch("/api/users/"+user_id+"/posts", { 
+                method: 'GET', 
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'X-CSRFToken': token
+                },
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (response) {
+                // display a success message
+                    console.log(response);
+                    self.response = response;
+                    self.error = response.error;
+                    //self.messageflag = true;
+                })
+                .catch(function (error) {
+                console.log(error);
+         
+           });
     }
 });
 
