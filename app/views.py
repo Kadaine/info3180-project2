@@ -229,6 +229,18 @@ def create_follow(user_id):
     db.session.add(follow)
     db.session.commit()
     return jsonify (message= 'You followed a user')
+    
+    
+@app.route('/api/users/<post_id>/like',methods=["POST"])
+@requires_auth
+def create_like(post_id):
+    likecheck = Likes.query.filter_by(user_id=session['user_id'], post_id=post_id).first()
+    if(likecheck is None):
+        like = Likes(user_id = session['user_id'], post_id = post_id)
+        db.session.add(like)
+        db.session.commit()
+        return jsonify (message= 'You just like a post')
+    return jsonify (DB= 'Already liked this post')
 
 # Here we define a function to collect form errors from Flask-WTF
 # which we can later use
