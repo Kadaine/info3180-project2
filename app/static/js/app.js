@@ -12,9 +12,6 @@ Vue.component('app-header', {
             <li class="nav-item active">
                 <router-link class="nav-link" to="/">Home <span class="sr-only">(current)</span></router-link>
              </li>
-            <li class="nav-item active">
-                <router-link class="nav-link" to="/about/">About <span class="sr-only">(current)</span></router-link>
-            </li>
              <li class="nav-item active">
             <router-link class="nav-link" v-bind:to="'/users/'+ user_id">My Profile <span class="sr-only">(current)</span></router-link>
           </li>
@@ -90,36 +87,42 @@ const Home = Vue.component('home', {
     }
 });
 
-const About = Vue.component('about', {
-   template: `
-    <div>
-        
-    </div>
-   `,
-    data: function() {
-       return {}
-    }
-});
 const Profile = Vue.component('profile', {
    template: `
     <div>
-        <div>
+        <div v-if="response">
             <h2 >All Post</h2>
-            <div style="margin-left: 90%">
-            </div>
             <div>
                 <div class="row border-style center profile profiles-container">
                     <img v-bind:src= "'/static/uploads/'+response.profile_photo" class="thumbnail" /> </br>
-                        <div class ="col">
-                            <h5>{{response.firstname}} {{response.lastname}}</h5>
-                            <h5>{{response.location}}</h5>
-                            <h5>{{response.biography}}</h5>
-                            <h5>{{response.joined_on}}</h5>
+                    <div class ="col">
+                        <h5>{{response.firstname}} {{response.lastname}}</h5>
+                        <h5>{{response.location}}</h5>
+                        <h5>{{response.biography}}</h5>
+                        <h5>{{response.joined_on}}</h5>
+                    </div>
+                    <div class ="col-3">
+                        <section class="like like_8oo9w">
+                            <h5 class="float-right set1">{{response.posts.length}}</h5>
+                            <h5 class="set">{{numberoffollower.length}}</h5>
+                        </section
+                        <section class="like like_8oo9w">
+                            <h5 class="float-right">posts</h5>
+                            <h5>following</h5>
+                        </section>
+                        <div v-if="isuser">
+                            <p> </p>
                         </div>
-                        <div class ="col">
-                        <h5>posts</h5>
-                        <h5>following</h5>
+                        <div v-else  class="kadz">
+                            <div v-if="following">
+                                <a class="btn btn-success col-md-8 pro-style" >Following</a>
+                            </div>
+                            <div v-else>
+                                
+                                <a class="btn btn-primary col-md-8 pro-style"  @click="follow">Follow</a>
+                            </div>
                         </div>
+                    </div>
                 </div>
                 <div class="pro-format">
                     <li v-for="post in response.posts" class="list pro-grid">
@@ -128,19 +131,21 @@ const Profile = Vue.component('profile', {
                 </div>
             </div>    
         </div>
+        <div v-else>
+            <li v-for="post in response.posts" class="list">
+                <h5>No Posts</h5>
+            </li>
+        </div>
     </div>
    `,
     watch: {
         '$route' (to, fom){
             this.reload()
+        },
+        'following' (newvalue, oldvalue){
+            this.reload()
         }
      },
-    data: function() {
-       return {
-           response: [],
-           error: []
-       };
-    },
     created: function () {
             let self = this;
             let user_id = this.$route.params.user_id;
@@ -157,16 +162,181 @@ const Profile = Vue.component('profile', {
                 })
                 .then(function (response) {
                 // display a success message
-                    console.log(response);
+                    if(response){
                     self.response = response;
-                    self.error = response.error;
-                    //self.messageflag = true;
+                }
+                if(response.isuser){
+                    self.isuser = true;
+                }else{
+                    self.isuser = false;
+                }
                 })
                 .catch(function (error) {
                 console.log(error);
-         
            });
-            
+        fetch("/api/users/"+user_id+"/followersnumber", { 
+            method: 'GET',
+            'headers': {
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+            return response.json();
+            })
+            .then(function (jsonResponse) {
+            // display a success message
+            console.log(jsonResponse);
+            if(jsonResponse.follower){
+                self.numberoffollower = jsonResponse.follower;
+            }
+            })
+            .catch(function (error) {
+            console.log(error);
+        });
+        fetch("/api/users/"+user_id+"/following", { 
+            method: 'GET',
+            'headers': {
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+            return response.json();
+            })
+            .then(function (jsonResponse) {
+            // display a success message
+            console.log(jsonResponse);
+            let follow = jsonResponse.following
+            if(follow==false){
+                console.log(follow);
+                self.following = false;
+            }else{
+                self.following = true;
+            }
+            })
+            .catch(function (error) {
+            console.log(error);
+            });
+    },
+    data: function() {
+       return {
+           response:[],
+           info:[],
+           error: [],
+           isuser:[],
+           numberoffollower:[],
+           following: false
+       };
+    },
+    
+    methods:{
+        reload(){
+            let self = this;
+            let user_id = this.$route.params.user_id;
+            fetch("/api/users/"+user_id+"/posts", { 
+                method: 'GET', 
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'X-CSRFToken': token
+                },
+                credentials: 'same-origin'
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (response) {
+                // display a success message
+                    if(response){
+                    self.response = response;
+                }
+                if(response.isuser){
+                    self.isuser = true;
+                }else{
+                self.following = true;
+                }
+                })
+                .catch(function (error) {
+                console.log(error);
+           });
+        fetch("/api/users/"+user_id+"/followersnumber", { 
+            method: 'GET',
+            'headers': {
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+            return response.json();
+            })
+            .then(function (jsonResponse) {
+            // display a success message
+            console.log(jsonResponse);
+            if(jsonResponse.follower){
+                self.numberoffollower = jsonResponse.follower;
+            }
+            })
+            .catch(function (error) {
+            console.log(error);
+        });
+        fetch("/api/users/"+user_id+"/following", { 
+            method: 'GET',
+            'headers': {
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (response) {
+            return response.json();
+            })
+            .then(function (jsonResponse) {
+            // display a success message
+            console.log(jsonResponse);
+            let follow = jsonResponse.following
+            if(follow==false){
+                console.log(follow);
+                self.following = false;
+            }else{
+                self.following = true;
+            }
+            })
+            .catch(function (error) {
+            console.log(error);
+            });
+        },
+        follow(){
+            let self = this;
+            let userid = this.$route.params.user_id;
+            fetch("/api/users/"+userid+"/follow", { 
+            method: 'POST',
+            'headers': {
+                'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                'X-CSRFToken': token
+            },
+            credentials: 'same-origin'
+            })
+            .then(function (response) {
+            return response.json();
+            })
+            .then(function (jsonResponse) {
+            // display a success message
+            console.log(jsonResponse);
+            if(jsonResponse.message){
+                let message = jsonResponse.message;
+                alert(message);
+                self.following = true;
+            }else{
+                alert("Failed to follow user");
+            }
+            })
+            .catch(function (error) {
+            console.log(error);
+            });
+        }
     }
 });
 
@@ -194,7 +364,7 @@ const Register = Vue.component('register', {
         </div>
         <h1 style="margin-left: 25%">Register</h1>
         <div class="container reg">
-            <form form id="signupForm" @submit.prevent="register" method="POST" enctype="multipart/form-data"
+            <form form id="signupForm" @submit.prevent="register" method="POST" enctype="multipart/form-data">
             <div class="card bg-light text-dark" style="margin-left: 25%; width:500px">
             <div class="card-body">
                 <div class="form-group">
@@ -244,7 +414,7 @@ const Register = Vue.component('register', {
                     <input type="file" name="upload"/>
                 </div>
                 <br/>
-                <button type="submit" class="btn btn-primary col-sm-12">Register</button>
+                <button type="submit" class="btn btn-primary col-sm-12" >Register</button>
             </div>
             </div>
             </form>
@@ -277,7 +447,7 @@ const Register = Vue.component('register', {
                 // display a success message
                 console.log(jsonResponse);
                 self.response = jsonResponse.result;
-                self.error = jsonResponse.errors;
+                self.$router.push('/explore/');
                 })
                 .catch(function (error) {
                 console.log(error);
@@ -461,23 +631,28 @@ const Login = Vue.component('login', {
 
 const Explore= Vue.component('explore', {
     template: `
-       <div>
+        <div>
             <div class="news">
                 <h2 >All Post</h2>
                 <div class="container">
                     <div class="form-inline d-flex justify-content-center"></div>
-                        <div style="margin-left: 90%">
+                        <div v-if="messageflag" class="sidenav" style="margin-left: 90%">
                             <router-link class="btn btn-primary post_div" to="/upload">New Post</router-link>
                         </div>
-                        <div class="card bg-light text-dark" style="margin-left: 25%; width:500px">
-                            <div class="card-body">
+                        <div v-else>
+                            <P class="alert alert-danger"><center>Please login to access this option</center></P>
+                         </div>
+                        <div class="card bg-light text-dark">
+                            <div class="card-body" style="margin-left: 25%; width:500px">
                                     <ul class="news__list">
                                         <li v-for="post in response.posts"class="news__item">
-                                            <img v-bind:src= "'/static/uploads/'+post.profile_photo" class="thumbnail" /> </br>
-                                            <router-link v-bind:to="'/users/' +post.user_id">{{ post.username}}</router-link></p>
-                                            <img v-bind:src= "'/static/uploads/'+post.photo_name" class="thumbnail" /> </br>
+                                            <img v-bind:src= "'/static/uploads/'+post.profile_photo" class="small" />
+                                            <router-link v-bind:to="'/users/' +post.user_id" style="color:black;">{{ post.username}}</router-link></p>
+                                            <img v-bind:src= "'/static/uploads/'+post.photo_name" class="mainsize" /> </br>
                                             {{ post.caption}}
-                                            {{ post.user_id}}
+                                            <section class="like like_8oo9w">
+                                                <a class="like_eszkz like_et4ho nohover" href="#"><span class="span_8scx2">{{ post.created_on}}</span></a>
+                                            </section>
                                         </li>
                                     </ul>
                                 </div>
@@ -485,13 +660,12 @@ const Explore= Vue.component('explore', {
                     </div>    
             </div>
         </div>
-    `,
-    data: function() {
-       return {
-           response: [],
-           error: [],
-       };
-    },
+    `,watch: {
+         
+        'trigger' (newvalue, oldvalue){
+            this.reload();
+        }
+      },
         created: function () {
             let self = this;
             fetch('/api/posts', { 
@@ -507,40 +681,24 @@ const Explore= Vue.component('explore', {
                 })
                 .then(function (response) {
                 // display a success message
-                    console.log(response.posts);
+                console.log(response.posts);
+                if(response.posts){
                     self.response = response;
-                    self.error = response.error;
-                    //self.messageflag = true;
+                    self.messageflag = true;
+                    self.trigger = false;
+                }
                 })
                 .catch(function (error) {
                 console.log(error);
             });
     },
-    getuser: function () {
-            let self = this;
-            let user_id = this.$route.params.user_id;
-            fetch("/api/users/"+user_id+"/posts", { 
-                method: 'GET', 
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                    'X-CSRFToken': token
-                },
-                credentials: 'same-origin'
-            })
-                .then(function (response) {
-                    return response.json();
-                })
-                .then(function (response) {
-                // display a success message
-                    console.log(response);
-                    self.response = response;
-                    self.error = response.error;
-                    //self.messageflag = true;
-                })
-                .catch(function (error) {
-                console.log(error);
-         
-           });
+    data: function() {
+       return {
+           response: [],
+           error: [],
+           messageflag: false,
+           trigger: null,
+       };
     }
 });
 
@@ -583,7 +741,6 @@ Vue.use(VueRouter);
 const router = new VueRouter({
     routes: [
         { path: "/", component: Home },
-        { path: "/about/", component: About },
         { path: "/upload/", component: uploadform },
         {path: "/users/:user_id", component: Profile},
         { path: "/register/", component: Register },

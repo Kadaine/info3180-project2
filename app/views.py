@@ -93,17 +93,29 @@ def upload(user_id):
 @app.route('/api/users/<user_id>/posts', methods=['GET'])
 @requires_auth
 def get_user_post(user_id):
-    if request.method == "GET":
+    if (int(user_id) == session['userid']):
         user_posts = UserPost.query.filter_by(user_id=user_id).all()
         if user_posts is not None:
             output = []
             for post in user_posts:
                 user = UserProfile.query.filter_by(id = user_id).first()
+                
                 post_data= {"id":post.post_id,"userid": post.user_id,"profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
                 output.append(post_data)
-            return jsonify({"firstname":user.first_name,"lastname":user.last_name,'profile_photo':user.profile_photo,"location":user.location,"biography":user.biography,"joined_on":user.joined_on,'posts':output})
-        else:
-            return jsonify({'message':'no post found'})
+            return jsonify({"firstname":user.first_name,"lastname":user.last_name,'profile_photo':user.profile_photo,"location":user.location,"biography":user.biography,"joined_on":user.joined_on.strftime("%B %Y"),"isuser":True,'posts':output})
+    else:
+        user_posts = UserPost.query.filter_by(user_id=user_id).all()
+        if user_posts is not None:
+            output = []
+            for post in user_posts:
+                user = UserProfile.query.filter_by(id = user_id).first()
+                
+                post_data= {"id":post.post_id,"userid": post.user_id,"profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
+                output.append(post_data)
+            return jsonify({"firstname":user.first_name,"lastname":user.last_name,'profile_photo':user.profile_photo,"location":user.location,"biography":user.biography,"joined_on":user.joined_on.strftime("%B %Y"),'posts':output})
+        
+        
+            
     
     
     
@@ -142,7 +154,7 @@ def get_all_post():
             output = []
             for post in all_posts:
                 user = UserProfile.query.filter_by(id = post.user_id).first()
-                post_data= {"user_id": post.user_id, "username": user.username, "profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on}
+                post_data= {"user_id": post.user_id, "username": user.username, "profile_photo": user.profile_photo, "photo_name": post.photo_name, "caption": post.caption, "created_on": post.created_on.strftime("%B %Y")}
                 output.append(post_data)
             return jsonify({'posts':output})
         else:
@@ -192,34 +204,31 @@ def logout():
     
     
     
-@app.route("/api/users/<user_id>/follow", methods=["POST"])
+@app.route('/api/users/<user_id>/followersnumber',methods=["GET"])
 @requires_auth
-def follow(user_id):
-    if request.method == "POST":
-        user= UserProfile.query.filter_by(user_id=UserPost.user_id).first()
-        if user is None:
-            return jsonify({'message':'The user is not found'})
-        elif user == g.current_user:
-            return jsonify({'message':'cannot follow yourself'})
-        else:
-            follower_id=user_id
-            user_id= g.current_user['id']
-            following =UserFollows(user_id,follower_id)
-            db.session.add(follow)
-            db.session.commit()
-            jsonify({'message':'You are following a user'})
-            
-            
-            
-            
-            
-            
-        
-@app.route("/secure_page")
-@login_required
-def secure_page():
-    return render_template('secure_page.html')
-
+def followersnumber(user_id):
+    numberfollow = UserFollows.query.filter_by(user_id=user_id).all()
+    numberoffollower=[]
+    for number in numberfollow:
+        num = {'test': "counted"}
+        numberoffollower.append(num)
+    return jsonify (follower= numberoffollower)
+    
+@app.route('/api/users/<user_id>/following',methods=["GET"])
+@requires_auth
+def followercheck(user_id):
+    followcheck = UserFollows.query.filter_by(user_id=user_id, follower_id=session['user_id']).first()
+    if(followcheck is None):
+        return jsonify (following= False)
+    return jsonify (following= True)
+    
+@app.route('/api/users/<user_id>/follow',methods=["POST"])
+@requires_auth
+def create_follow(user_id):
+    follow = UserFollows(user_id = user_id, follower_id=session['user_id'])
+    db.session.add(follow)
+    db.session.commit()
+    return jsonify (message= 'You followed a user')
 
 # Here we define a function to collect form errors from Flask-WTF
 # which we can later use
