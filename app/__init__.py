@@ -9,7 +9,7 @@ UPLOAD_FOLDER = './app/static/uploads'
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'v\xf9\xf7\x11\x13\x18\xfaMYp\xed_\xe8\xc9w\x06\x8e\xf0f\xd2\xba\xfd\x8c\xda'
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://zrqwuqoworhvxl:175885b3069ef53d904d5687f14b78e6713e6eb662b0b8d937adea9f80d19ce8@ec2-107-20-249-48.compute-1.amazonaws.com:5432/db2oiiq67mg11p"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgres://ljfwgxjrbsrfij:695cb81e25874a563441ace3f66191e84c7cded267cdb82277b87d8c23e49c65@ec2-23-23-142-5.compute-1.amazonaws.com:5432/dg71p3dam2fca"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True # added just to suppress a warning
 db = SQLAlchemy(app)
 csrf = CSRFProtect(app)
